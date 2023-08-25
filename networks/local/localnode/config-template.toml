@@ -1,0 +1,11 @@
+## Overrides for default cometbft configuration
+
+## Suppress noisy cometbft logging
+log_level = "error"
+
+[rpc]
+laddr = "tcp://0.0.0.0:26657"
+
+[consensus]
+#create_empty_blocks = false
+
