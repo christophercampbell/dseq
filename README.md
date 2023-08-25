@@ -1,8 +1,16 @@
 # desq
 
-distributed sequencer built on cometbft
+Distributed sequencer built on cometbft
 
-https://docs.cometbft.com/v0.37/guides/go-built-in
+### getting started
+
+Install cometbft, it has tools for generating node configs.
+
+```shell
+git clone --depth 1 --branch v0.38.0-rc3  https://github.com/cometbft/cometbft.git
+cd cometbft
+make install
+```
 
 ### build the binary
 
