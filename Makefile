@@ -20,7 +20,7 @@ DOCKERVARS := GOBIN=$(GOBIN) CGO_ENABLED=0 GOARCH=amd64 GOOS=linux
 COMETBFT := $(shell command -v cometbft 2> /dev/null)
 COMETBFT_VERSION := v0.38.0-rc3
 
-build: ## build the binary
+build: build-linux ## build the binary
 	$(GOENVVARS)  go build -o $(GOBIN)/$(GOBINARY) $(GOCMD)
 .PHONY: build
 

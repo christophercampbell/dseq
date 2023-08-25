@@ -14,7 +14,7 @@ func (app *SequencerApplication) InitChain(ctx context.Context, chain *types.Req
 }
 
 func (app *SequencerApplication) PrepareProposal(ctx context.Context, proposal *types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error) {
-	app.logger.Info("preparing proposal", "txs", len(proposal.Txs))
+	app.logger.Debug("preparing proposal", "txs", len(proposal.Txs))
 
 	// simulate sequencing the transactions in some way...
 	txs := make([][]byte, len(proposal.Txs))
@@ -31,14 +31,14 @@ func (app *SequencerApplication) PrepareProposal(ctx context.Context, proposal *
 
 func (app *SequencerApplication) ProcessProposal(ctx context.Context, proposal *types.RequestProcessProposal) (*types.ResponseProcessProposal, error) {
 	proposer := common.BytesToAddress(proposal.ProposerAddress)
-	app.logger.Info("processing proposal", "proposer", proposer, "txs", len(proposal.Txs))
+	app.logger.Debug("processing proposal", "proposer", proposer, "txs", len(proposal.Txs))
 	return &types.ResponseProcessProposal{
 		Status: types.ResponseProcessProposal_ACCEPT,
 	}, nil
 }
 
 func (app *SequencerApplication) FinalizeBlock(ctx context.Context, block *types.RequestFinalizeBlock) (*types.ResponseFinalizeBlock, error) {
-	app.logger.Info("finalize block", "height", block.Height, "txs", len(block.Txs), "hash", common.BytesToHash(block.Hash).Hex(), "size", block.Size())
+	app.logger.Debug("finalize block", "height", block.Height, "txs", len(block.Txs), "hash", common.BytesToHash(block.Hash).Hex(), "size", block.Size())
 
 	app.stagedTxs = make([][]byte, 0)
 
