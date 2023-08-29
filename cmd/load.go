@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	crand "crypto/rand"
 	"fmt"
-	"math/rand"
+	"io"
+	mrand "math/rand"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,9 +15,6 @@ import (
 )
 
 func RunLoad(cli *cli.Context) error {
-
-	rand.Seed(time.Now().UnixNano())
-
 	nodesCsv := cli.String("nodes")
 	nodes := strings.Split(nodesCsv, ",")
 
@@ -43,7 +42,7 @@ func RunLoad(cli *cli.Context) error {
 			for {
 				select {
 				case <-ch:
-					tx := makeTx(nodes[rand.Intn(len(nodes))])
+					tx := makeTx(nodes[mrand.Intn(len(nodes))])
 					t := sendTx(tx)
 					wg.Done()
 					totalDuration += t
@@ -66,7 +65,7 @@ func RunLoad(cli *cli.Context) error {
 
 func makeTx(node string) string {
 	tx := make([]byte, 40)
-	_, _ = rand.Read(tx)
+	_, _ = crand.Read(tx)
 	hexTx := common.BytesToHash(tx).Hex()
 	return fmt.Sprintf("http://%s/broadcast_tx_commit?tx=\"%s\"", node, hexTx)
 }
@@ -79,6 +78,11 @@ func sendTx(url string) time.Duration {
 		return 0
 	}
 	defer func() { _ = resp.Body.Close() }()
+
+	// drain response as a real client would do, but just warn on error
+	if _, warn := io.ReadAll(resp.Body); warn != nil {
+		fmt.Println("Warn:", err)
+	}
 
 	fmt.Printf("URL: %s, Status Code: %d\n", url, resp.StatusCode)
 	return time.Now().Sub(start)

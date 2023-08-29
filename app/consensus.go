@@ -8,12 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (app *SequencerApplication) InitChain(ctx context.Context, chain *types.RequestInitChain) (*types.ResponseInitChain, error) {
+func (app *SequencerApplication) InitChain(_ context.Context, chain *types.RequestInitChain) (*types.ResponseInitChain, error) {
 	app.logger.Info("initializing chain", "chain-id", chain.ChainId, "initial-height", chain.InitialHeight)
 	return &types.ResponseInitChain{}, nil
 }
 
-func (app *SequencerApplication) PrepareProposal(ctx context.Context, proposal *types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error) {
+func (app *SequencerApplication) PrepareProposal(_ context.Context, proposal *types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error) {
 	app.logger.Debug("preparing proposal", "txs", len(proposal.Txs))
 
 	// simulate sequencing the transactions in some way...
@@ -29,7 +29,7 @@ func (app *SequencerApplication) PrepareProposal(ctx context.Context, proposal *
 	}, nil
 }
 
-func (app *SequencerApplication) ProcessProposal(ctx context.Context, proposal *types.RequestProcessProposal) (*types.ResponseProcessProposal, error) {
+func (app *SequencerApplication) ProcessProposal(_ context.Context, proposal *types.RequestProcessProposal) (*types.ResponseProcessProposal, error) {
 	proposer := common.BytesToAddress(proposal.ProposerAddress)
 	app.logger.Debug("processing proposal", "proposer", proposer, "txs", len(proposal.Txs))
 	return &types.ResponseProcessProposal{
@@ -37,7 +37,7 @@ func (app *SequencerApplication) ProcessProposal(ctx context.Context, proposal *
 	}, nil
 }
 
-func (app *SequencerApplication) FinalizeBlock(ctx context.Context, block *types.RequestFinalizeBlock) (*types.ResponseFinalizeBlock, error) {
+func (app *SequencerApplication) FinalizeBlock(_ context.Context, block *types.RequestFinalizeBlock) (*types.ResponseFinalizeBlock, error) {
 	app.logger.Debug("finalize block", "height", block.Height, "txs", len(block.Txs), "hash", common.BytesToHash(block.Hash).Hex(), "size", block.Size())
 
 	app.stagedTxs = make([][]byte, 0)
@@ -67,17 +67,17 @@ func (app *SequencerApplication) FinalizeBlock(ctx context.Context, block *types
 	return response, nil
 }
 
-func (app *SequencerApplication) ExtendVote(ctx context.Context, vote *types.RequestExtendVote) (*types.ResponseExtendVote, error) {
+func (app *SequencerApplication) ExtendVote(_ context.Context, _ *types.RequestExtendVote) (*types.ResponseExtendVote, error) {
 	app.logger.Info("extend vote")
 	return &types.ResponseExtendVote{}, nil
 }
 
-func (app *SequencerApplication) VerifyVoteExtension(ctx context.Context, extension *types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error) {
+func (app *SequencerApplication) VerifyVoteExtension(_ context.Context, _ *types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error) {
 	app.logger.Info("verify vote extension")
 	return &types.ResponseVerifyVoteExtension{}, nil
 }
 
-func (app *SequencerApplication) Commit(ctx context.Context, commit *types.RequestCommit) (*types.ResponseCommit, error) {
+func (app *SequencerApplication) Commit(_ context.Context, _ *types.RequestCommit) (*types.ResponseCommit, error) {
 	app.logger.Info("commit")
 
 	// TODO: apply the validator updates to state, this will require storing validator state, and tracking them in memory
@@ -85,7 +85,7 @@ func (app *SequencerApplication) Commit(ctx context.Context, commit *types.Reque
 	// FAKE: For the purposes of this POC, write the transactions in order to a file. Compare the sequences on different
 	// nodes as proof that they come to sequence consensus
 	for _, tx := range app.stagedTxs {
-		app.sink.Write(tx)
+		app.sequence.Write(tx)
 	}
 
 	if err := app.state.Save(); err != nil {

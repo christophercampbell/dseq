@@ -42,8 +42,8 @@ func StartNode(cli *cli.Context) error {
 	state := app.NewState(homeDir)
 	defer state.Close()
 
-	sink := app.NewSink(homeDir)
-	defer sink.Close()
+	sequence := app.OpenSequenceFile(homeDir)
+	defer sequence.Close()
 
 	// sequencer log (distinct from cometbft cmtLog)
 	appLog := hclog.New(&hclog.LoggerOptions{
@@ -68,7 +68,7 @@ func StartNode(cli *cli.Context) error {
 		return err
 	}
 
-	sequencer := app.NewSequencer(appLog, cfg.Moniker, addr, state, sink)
+	sequencer := app.NewSequencer(appLog, cfg.Moniker, addr, state, sequence)
 
 	var n *node.Node
 	if n, err = node.NewNode(

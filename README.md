@@ -26,6 +26,12 @@ To run the local testnet cluster
 make start
 ```
 
+Send a transaction
+
+```
+curl -s 'localhost:26657/broadcast_tx_commit?tx="0xDEADBEEF"'
+```
+
 Send in some load randomly across nodes
 
 ```shell
@@ -50,16 +56,4 @@ a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
-```
-
-Since the image mounts the local build directory, the binary can be rebuilt without having to rebuild the local docker image
-
-```shell
-make build-linux
-```
-
-Send a transaction
-
-```
-curl -s 'localhost:26657/broadcast_tx_commit?tx="cometbft=rocks"'
 ```

@@ -10,24 +10,24 @@ import (
 )
 
 var (
-	SinkFilename = "dseq.txt"
+	SequenceFile = "dseq.txt"
 )
 
-type Sink struct {
+type Sequence struct {
 	file *os.File
 	path string
 }
 
-func NewSink(homeDir string) *Sink {
-	path := filepath.Join(homeDir, SinkFilename)
+func OpenSequenceFile(homeDir string) *Sequence {
+	path := filepath.Join(homeDir, SequenceFile)
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatalf("failed to open sink file %v: %v", path, err)
 	}
-	return &Sink{file: f, path: path}
+	return &Sequence{file: f, path: path}
 }
 
-func (s *Sink) Write(data []byte) {
+func (s *Sequence) Write(data []byte) {
 	hash := common.BytesToHash(data)
 	line := fmt.Sprintf("%s\n", hash.Hex())
 	if _, err := s.file.WriteString(line); err != nil {
@@ -35,7 +35,7 @@ func (s *Sink) Write(data []byte) {
 	}
 }
 
-func (s *Sink) Close() {
+func (s *Sequence) Close() {
 	err := s.file.Close()
 	if err != nil {
 		log.Printf("failed to close skin file %v: %v", s.file.Name(), err)
