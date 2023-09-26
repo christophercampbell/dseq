@@ -96,7 +96,5 @@ func StartNode(cli *cli.Context) error {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 
-	fmt.Println("TEST TEST TEST")
-
 	return err
 }
