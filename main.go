@@ -39,6 +39,12 @@ func main() {
 					Usage:    "Home directory `DIR`",
 					Required: true,
 				},
+				&cli.UintFlag{
+					Name:     "port",
+					Usage:    "Data stream server port (6900)",
+					Required: false,
+					Value:    6900,
+				},
 			},
 		}, {
 			Name:   "load",
@@ -62,6 +68,23 @@ func main() {
 					Aliases: []string{"c"},
 					Usage:   "Number of concurrent requests",
 					Value:   1,
+				},
+			},
+		}, {
+			Name:   "read",
+			Usage:  "Read a data stream",
+			Action: cmd.ReadStream,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "node",
+					Usage:    "Node to read data stream from (host:port)",
+					Required: true,
+				},
+				&cli.UintFlag{
+					Name:     "from",
+					Usage:    "Where to start the data stream from",
+					Required: false,
+					Value:    0,
 				},
 			},
 		},

@@ -57,3 +57,9 @@ a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
 ```
+
+Tail the streams (zkevm-data-stream)
+
+```shell
+build/dseq read --node localhost:690(0-3) --from 0
+```

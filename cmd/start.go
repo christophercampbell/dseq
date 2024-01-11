@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"dseq/app"
+	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli/flags"
 	cmtlog "github.com/cometbft/cometbft/libs/log"
@@ -23,6 +25,7 @@ import (
 func StartNode(cli *cli.Context) error {
 
 	homeDir := cli.String("home")
+	dataPort := uint16(cli.Uint("port"))
 
 	cfg := config.DefaultConfig()
 	cfg.SetRoot(homeDir)
@@ -45,12 +48,6 @@ func StartNode(cli *cli.Context) error {
 	sequence := app.OpenSequenceFile(homeDir)
 	defer sequence.Close()
 
-	// sequencer log (distinct from cometbft cmtLog)
-	appLog := hclog.New(&hclog.LoggerOptions{
-		Level:      hclog.Debug,
-		JSONFormat: false,
-	})
-
 	pv := privval.LoadFilePV(
 		cfg.PrivValidatorKeyFile(),
 		cfg.PrivValidatorStateFile(),
@@ -63,12 +60,36 @@ func StartNode(cli *cli.Context) error {
 		return err
 	}
 
+	streamFile := strings.Join([]string{homeDir, "dseq.bin"}, "/")
+
+	streamServer, err := datastreamer.NewServer(
+		dataPort,
+		1,
+		1,
+		datastreamer.StreamType(1),
+		streamFile,
+		nil,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	err = streamServer.Start()
+	if err != nil {
+		panic(err)
+	}
+
 	cmtLog := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	if cmtLog, err = flags.ParseLogLevel(cfg.LogLevel, cmtLog, config.DefaultLogLevel); err != nil {
 		return err
 	}
 
-	sequencer := app.NewSequencer(appLog, cfg.Moniker, addr, state, sequence)
+	// sequencer log (distinct from cometbft cmtLog)
+	appLog := hclog.New(&hclog.LoggerOptions{
+		Level:      hclog.Debug,
+		JSONFormat: false,
+	})
+	sequencer := app.NewSequencer(appLog, cfg.Moniker, addr, state, sequence, streamServer)
 
 	var n *node.Node
 	if n, err = node.NewNode(

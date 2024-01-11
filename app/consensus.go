@@ -3,9 +3,11 @@ package app
 import (
 	"context"
 
+	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 )
 
 func (app *SequencerApplication) InitChain(_ context.Context, chain *types.RequestInitChain) (*types.ResponseInitChain, error) {
@@ -37,16 +39,33 @@ func (app *SequencerApplication) ProcessProposal(_ context.Context, proposal *ty
 	}, nil
 }
 
+const (
+	EtL2BlockStart datastreamer.EntryType = 1 // EtL2BlockStart entry type
+	EtL2Tx         datastreamer.EntryType = 2 // EtL2Tx entry type
+	EtL2BlockEnd   datastreamer.EntryType = 3 // EtL2BlockEnd entry type
+
+	StSequencer = 1 // StSequencer sequencer stream type
+)
+
 func (app *SequencerApplication) FinalizeBlock(_ context.Context, block *types.RequestFinalizeBlock) (*types.ResponseFinalizeBlock, error) {
 	app.logger.Debug("finalize block", "height", block.Height, "txs", len(block.Txs), "hash", common.BytesToHash(block.Hash).Hex(), "size", block.Size())
 
 	app.stagedTxs = make([][]byte, 0)
 
-	// TODO: decide on punishment for block.Misbehavior[]
+	err := app.dataServer.StartAtomicOp()
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: Execute transactions, accumulating []types.ExecTxResult
+	blockNum, err := app.dataServer.AddStreamEntry(EtL2BlockStart, []byte{})
+	if err != nil {
+		return nil, err
+	}
+
+	app.logger.Debug("starting block", "block", blockNum)
 
 	respTxs := make([]*types.ExecTxResult, len(block.Txs))
+
 	for i, tx := range block.Txs {
 
 		app.stagedTxs = append(app.stagedTxs, tx)
@@ -57,12 +76,36 @@ func (app *SequencerApplication) FinalizeBlock(_ context.Context, block *types.R
 		}
 		app.state.Size++
 
+		entryNum, err := app.dataServer.AddStreamEntry(EtL2BlockStart, tx)
+		if err != nil {
+			err = app.dataServer.RollbackAtomicOp()
+			if err != nil {
+				return nil, errors.Cause(err)
+			}
+			return nil, err
+		}
+		app.logger.Debug("added entry", "block", blockNum, "entry", entryNum)
 	}
+
+	// how to mark end of block?
+	_, err = app.dataServer.AddStreamEntry(EtL2BlockEnd, []byte{})
+	if err != nil {
+		app.logger.Error("error finalizing block to stream", "block", blockNum, "error", err)
+		err = app.dataServer.RollbackAtomicOp()
+		if err != nil {
+			return nil, errors.Cause(err)
+		}
+		return nil, err
+	}
+
+	err = app.dataServer.CommitAtomicOp()
+	if err != nil {
+		return nil, err
+	}
+
 	app.state.Height = block.Height
 
-	response := &types.ResponseFinalizeBlock{TxResults: respTxs, AppHash: app.state.Hash()}
-
-	// TODO: potentially raise block level events in response as well
+	response := &types.ResponseFinalizeBlock{TxResults: respTxs, AppHash: app.state.Hash()} // hash should include tx hashes
 
 	return response, nil
 }
