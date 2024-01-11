@@ -52,6 +52,12 @@ func (app *SequencerApplication) FinalizeBlock(_ context.Context, block *types.R
 
 	app.stagedTxs = make([][]byte, 0)
 
+	respTxs := make([]*types.ExecTxResult, len(block.Txs))
+
+	if len(block.Txs) == 0 {
+		return &types.ResponseFinalizeBlock{TxResults: respTxs, AppHash: app.state.Hash()}, nil
+	}
+
 	err := app.dataServer.StartAtomicOp()
 	if err != nil {
 		return nil, err
@@ -64,8 +70,6 @@ func (app *SequencerApplication) FinalizeBlock(_ context.Context, block *types.R
 
 	app.logger.Debug("starting block", "block", blockNum)
 
-	respTxs := make([]*types.ExecTxResult, len(block.Txs))
-
 	for i, tx := range block.Txs {
 
 		app.stagedTxs = append(app.stagedTxs, tx)
@@ -76,7 +80,7 @@ func (app *SequencerApplication) FinalizeBlock(_ context.Context, block *types.R
 		}
 		app.state.Size++
 
-		entryNum, err := app.dataServer.AddStreamEntry(EtL2BlockStart, tx)
+		entryNum, err := app.dataServer.AddStreamEntry(EtL2Tx, tx)
 		if err != nil {
 			err = app.dataServer.RollbackAtomicOp()
 			if err != nil {

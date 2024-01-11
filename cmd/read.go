@@ -40,7 +40,16 @@ func ReadStream(cli *cli.Context) error {
 	return stream.ExecCommand(datastreamer.CmdStop)
 }
 
-func printEntryNum(e *datastreamer.FileEntry, c *datastreamer.StreamClient, s *datastreamer.StreamServer) error {
-	fmt.Printf("PROCESS entry(%s): %d | %d | %d | %s\n", c.Id, e.Number, e.Length, e.Type, hexutil.Encode(e.Data))
+func printEntryNum(e *datastreamer.FileEntry, c *datastreamer.StreamClient, _ *datastreamer.StreamServer) error {
+	kind := "unknown"
+	switch e.Type {
+	case 1:
+		kind = "block start"
+	case 2:
+		kind = "transaction"
+	case 3:
+		kind = "block end"
+	}
+	fmt.Printf("PROCESS entry(%s): %4d | %4d | %11s | %s\n", c.Id, e.Number, e.Length, kind, hexutil.Encode(e.Data))
 	return nil
 }

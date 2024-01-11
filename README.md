@@ -1,6 +1,6 @@
 # desq
 
-Distributed sequencer built on cometbft
+Distributed sequencer built on cometbft with zkevm-data-stream for persistence and access
 
 ### getting started
 
