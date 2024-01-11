@@ -17,7 +17,6 @@ import (
 	"github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
 )
@@ -45,9 +44,6 @@ func StartNode(cli *cli.Context) error {
 	state := app.NewState(homeDir)
 	defer state.Close()
 
-	sequence := app.OpenSequenceFile(homeDir)
-	defer sequence.Close()
-
 	pv := privval.LoadFilePV(
 		cfg.PrivValidatorKeyFile(),
 		cfg.PrivValidatorStateFile(),
@@ -66,7 +62,7 @@ func StartNode(cli *cli.Context) error {
 		dataPort,
 		1,
 		1,
-		datastreamer.StreamType(1),
+		datastreamer.StreamType(app.StSequencer),
 		streamFile,
 		nil,
 	)
@@ -79,17 +75,12 @@ func StartNode(cli *cli.Context) error {
 		panic(err)
 	}
 
-	cmtLog := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
-	if cmtLog, err = flags.ParseLogLevel(cfg.LogLevel, cmtLog, config.DefaultLogLevel); err != nil {
+	logger := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
+	if logger, err = flags.ParseLogLevel(cfg.LogLevel, logger, config.DefaultLogLevel); err != nil {
 		return err
 	}
 
-	// sequencer log (distinct from cometbft cmtLog)
-	appLog := hclog.New(&hclog.LoggerOptions{
-		Level:      hclog.Debug,
-		JSONFormat: false,
-	})
-	sequencer := app.NewSequencer(appLog, cfg.Moniker, addr, state, sequence, streamServer)
+	sequencer := app.NewSequencer(logger, cfg.Moniker, addr, state, streamServer)
 
 	var n *node.Node
 	if n, err = node.NewNode(
@@ -100,7 +91,7 @@ func StartNode(cli *cli.Context) error {
 		node.DefaultGenesisDocProviderFunc(cfg),
 		config.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
-		cmtLog); err != nil {
+		logger); err != nil {
 		return err
 	}
 

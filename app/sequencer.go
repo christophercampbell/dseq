@@ -3,8 +3,8 @@ package app
 import (
 	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hashicorp/go-hclog"
 )
 
 const (
@@ -13,10 +13,9 @@ const (
 
 type SequencerApplication struct {
 	ID        string
-	logger    hclog.Logger
+	logger    log.Logger
 	addr      common.Address
 	state     *State
-	sequence  *Sequence
 	stagedTxs [][]byte
 
 	// TODO: Store and maintain validator info for helping restarts, and punishing misbehavior
@@ -27,13 +26,12 @@ type SequencerApplication struct {
 
 var _ types.Application = (*SequencerApplication)(nil)
 
-func NewSequencer(logger hclog.Logger, identity string, addr common.Address, state *State, sequence *Sequence, ds *datastreamer.StreamServer) *SequencerApplication {
+func NewSequencer(logger log.Logger, identity string, addr common.Address, state *State, ds *datastreamer.StreamServer) *SequencerApplication {
 	return &SequencerApplication{
 		ID:         identity,
 		logger:     logger,
 		addr:       addr,
 		state:      state,
-		sequence:   sequence,
 		dataServer: ds,
 	}
 }

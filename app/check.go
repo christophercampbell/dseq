@@ -7,7 +7,5 @@ import (
 )
 
 func (app *SequencerApplication) CheckTx(ctx context.Context, tx *types.RequestCheckTx) (*types.ResponseCheckTx, error) {
-	app.logger.Debug("check tx", "app-id", app.ID)
-	// ???
 	return &types.ResponseCheckTx{Code: types.CodeTypeOK}, nil
 }

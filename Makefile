@@ -54,11 +54,11 @@ load-10: ## send 10 txs to nodes randomly with concurrency 1
 .PHONY: load-10
 
 load-100: ## send 100 txs to nodes randomly with concurrency 3
-	go run main.go load --nodes localhost:26657,localhost:26660,localhost:26662,localhost:26664 -r 100 -c 3
+	go run main.go load --nodes localhost:26657,localhost:26660,localhost:26662,localhost:26664 -r 100 -c 9
 .PHONY: load-100
 
 compare: ## compare node sequence files
-	for i in {0..3}; do md5sum "./build/node$${i}/dseq.txt" | cut -d' ' -f1; done
+	for i in {0..3}; do md5sum "./build/node$${i}/dseq.bin" | cut -d' ' -f1; done
 .PHONY: compare
 
 

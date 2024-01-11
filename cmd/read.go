@@ -50,6 +50,6 @@ func printEntryNum(e *datastreamer.FileEntry, c *datastreamer.StreamClient, _ *d
 	case 3:
 		kind = "block end"
 	}
-	fmt.Printf("PROCESS entry(%s): %6d | %11s | %s\n", c.Id, e.Number, kind, hexutil.Encode(e.Data))
+	fmt.Printf("%6d | %11s | %s\n", e.Number, kind, hexutil.Encode(e.Data))
 	return nil
 }
