@@ -1,13 +1,15 @@
 # desq
 
-Distributed sequencer built on cometbft with zkevm-data-stream for persistence and access
+Distributed sequencer built on cometbft with zkevm-data-stream for persistence and access.
+
+![BFT sequencer](dseq.png)
 
 ### getting started
 
 Install cometbft, it has tools for generating node configs.
 
 ```shell
-git clone --depth 1 --branch v0.38.0-rc3  https://github.com/cometbft/cometbft.git
+git clone --depth 1 --branch v0.38.2  https://github.com/cometbft/cometbft.git
 cd cometbft
 make install
 ```
