@@ -53,7 +53,7 @@ URL: http://localhost:26664/broadcast_tx_commit?tx="0x84045d87f3c67cf22746e995af
 Compare the node's sequence files, they should be the same. 
 
 ```shell
-make compare                                                                                                          
+make checksum                                                                                                          
 a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2

@@ -57,9 +57,13 @@ load-100: ## send 100 txs to nodes randomly with concurrency 3
 	go run main.go load --nodes localhost:26657,localhost:26660,localhost:26662,localhost:26664 -r 100 -c 9
 .PHONY: load-100
 
-compare: ## compare node sequence files
+checksum: ## compare node sequence files
 	for i in {0..3}; do md5sum "./build/node$${i}/dseq.bin" | cut -d' ' -f1; done
 .PHONY: compare
+
+read-all: ## multi tail consumers
+	multitail -l "./build/dseq read --node localhost:6900" -l "./build/dseq read --node localhost:6901" -l "./build/dseq read --node localhost:6902" -l "./build/dseq read --node localhost:6903"
+.PHONY: read
 
 
 .PHONY: help
