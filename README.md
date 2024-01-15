@@ -60,7 +60,7 @@ a1202e1cd87dde92e86e53c1c12905e2
 a1202e1cd87dde92e86e53c1c12905e2
 ```
 
-Multi-tail the streams consumers, they should all be exactly the same
+Multi-tail the streams consumers, they should all be exactly the same (requires `multitail`)
 
 ```shell
 make read-all
