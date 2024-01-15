@@ -1,6 +1,6 @@
 # desq
 
-Decentralized byte sequencer built with cometbft & zkevm-data-stream that produces identical sequence of bytes from distributed uncoordinated producers. 
+A decentralized byte sequencer built with cometbft & zkevm-data-stream that produces a uniform sequence of bytes from multiple uncoordinated producers. 
 
 ![BFT sequencer](dseq.png)
 
