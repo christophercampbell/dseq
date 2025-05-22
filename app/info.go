@@ -2,15 +2,18 @@ package app
 
 import (
 	"context"
-	"fmt"
-
+	"encoding/json"
 	"github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/version"
 )
 
 func (app *SequencerApplication) Info(_ context.Context, _ *types.RequestInfo) (*types.ResponseInfo, error) {
+	data, _ := json.Marshal(struct {
+		Size   int64 `json:"size"`
+		Height int64 `json:"height"`
+	}{app.state.Size, app.state.Height})
 	return &types.ResponseInfo{
-		Data:             fmt.Sprintf("{\"size\":%v}", app.state.Size),
+		Data:             string(data),
 		Version:          version.ABCIVersion,
 		AppVersion:       AppVersion,
 		LastBlockHeight:  app.state.Height,

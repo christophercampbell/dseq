@@ -2,10 +2,10 @@ package app
 
 import (
 	"context"
+	"math/rand"
 
 	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/pkg/errors"
 )
 
@@ -18,10 +18,9 @@ func (app *SequencerApplication) PrepareProposal(_ context.Context, proposal *ty
 	// simulate sequencing the transactions in some way...
 	txs := make([][]byte, len(proposal.Txs))
 	copy(txs, proposal.Txs)
-	for i := len(txs) - 1; i > 0; i-- {
-		j := rand.Intn(i + 1)
+	rand.Shuffle(len(txs), func(i, j int) {
 		txs[i], txs[j] = txs[j], txs[i]
-	}
+	})
 
 	return &types.ResponsePrepareProposal{
 		Txs: txs,

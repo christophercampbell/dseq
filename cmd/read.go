@@ -17,7 +17,7 @@ func ReadStream(cli *cli.Context) error {
 
 	stream, err := datastreamer.NewClient(node, datastreamer.StreamType(1))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	stream.FromEntry = from
@@ -25,12 +25,12 @@ func ReadStream(cli *cli.Context) error {
 
 	err = stream.Start()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = stream.ExecCommand(datastreamer.CmdStart)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	c := make(chan os.Signal, 1)

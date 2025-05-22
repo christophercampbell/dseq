@@ -2,10 +2,10 @@ package app
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"log"
 
 	"github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/json"
 )
 
 var (
@@ -30,12 +30,12 @@ func NewState(path string) *State {
 	}
 	stateBytes, err := db.Get(stateKey)
 	if err != nil {
-		log.Fatalf("failed to load state: %v", err)
+		log.Fatalf("failed to load state: %w", err)
 	}
 	if len(stateBytes) > 0 {
 		err = json.Unmarshal(stateBytes, &state)
 		if err != nil {
-			log.Fatalf("failed to read current state: %v", err)
+			log.Fatalf("failed to read current state: %w", err)
 		}
 	}
 	state.db = db
@@ -56,7 +56,7 @@ func (s *State) Save() error {
 
 func (s *State) Hash() []byte {
 	bytes := make([]byte, 8)
-	binary.PutVarint(bytes, s.Size)
+	binary.BigEndian.PutUint64(bytes, uint64(s.Size))
 	return bytes
 }
 

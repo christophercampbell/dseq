@@ -12,6 +12,8 @@ const (
 )
 
 type SequencerApplication struct {
+	types.BaseApplication
+
 	ID        string
 	logger    log.Logger
 	addr      common.Address
@@ -24,14 +26,46 @@ type SequencerApplication struct {
 	dataServer *datastreamer.StreamServer
 }
 
+// Option configures a SequencerApplication.
+type Option func(*SequencerApplication)
+
+// WithIdentity sets the application identity.
+func WithIdentity(identity string) Option {
+	return func(app *SequencerApplication) {
+		app.ID = identity
+	}
+}
+
+// WithAddress sets the sequencer's address.
+func WithAddress(addr common.Address) Option {
+	return func(app *SequencerApplication) {
+		app.addr = addr
+	}
+}
+
+// WithState sets the application state.
+func WithState(state *State) Option {
+	return func(app *SequencerApplication) {
+		app.state = state
+	}
+}
+
+// WithDataServer sets the data stream server.
+func WithDataServer(ds *datastreamer.StreamServer) Option {
+	return func(app *SequencerApplication) {
+		app.dataServer = ds
+	}
+}
+
 var _ types.Application = (*SequencerApplication)(nil)
 
-func NewSequencer(logger log.Logger, identity string, addr common.Address, state *State, ds *datastreamer.StreamServer) *SequencerApplication {
-	return &SequencerApplication{
-		ID:         identity,
-		logger:     logger,
-		addr:       addr,
-		state:      state,
-		dataServer: ds,
+// NewSequencer constructs a SequencerApplication with the given logger and options.
+func NewSequencer(logger log.Logger, opts ...Option) *SequencerApplication {
+	app := &SequencerApplication{
+		logger: logger,
 	}
+	for _, opt := range opts {
+		opt(app)
+	}
+	return app
 }

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"dseq/app"
 	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
+	"github.com/christophercampbell/dseq/app"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/cli/flags"
 	cmtlog "github.com/cometbft/cometbft/libs/log"
@@ -67,12 +67,12 @@ func StartNode(cli *cli.Context) error {
 		nil,
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = streamServer.Start()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	logger := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
@@ -80,7 +80,13 @@ func StartNode(cli *cli.Context) error {
 		return err
 	}
 
-	sequencer := app.NewSequencer(logger, cfg.Moniker, addr, state, streamServer)
+	sequencer := app.NewSequencer(
+		logger,
+		app.WithIdentity(cfg.Moniker),
+		app.WithAddress(addr),
+		app.WithState(state),
+		app.WithDataServer(streamServer),
+	)
 
 	var n *node.Node
 	if n, err = node.NewNode(

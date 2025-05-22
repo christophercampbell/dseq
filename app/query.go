@@ -7,5 +7,8 @@ import (
 )
 
 func (app *SequencerApplication) Query(ctx context.Context, query *types.RequestQuery) (*types.ResponseQuery, error) {
-	return &types.ResponseQuery{}, nil
+	switch query.Path {
+	default:
+		return &types.ResponseQuery{}, nil
+	}
 }

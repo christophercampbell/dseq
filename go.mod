@@ -1,4 +1,4 @@
-module dseq
+module github.com/christophercampbell/dseq
 
 go 1.21
 

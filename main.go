@@ -5,22 +5,13 @@ import (
 	"log"
 	"os"
 
-	"dseq/app"
-	"dseq/cmd"
+	"github.com/christophercampbell/dseq/app"
+	"github.com/christophercampbell/dseq/cmd"
 	"github.com/urfave/cli/v2"
 )
 
 const (
 	AppName = "dseq"
-)
-
-var (
-	homeFlag = cli.StringFlag{
-		Name:     "home",
-		Aliases:  []string{"h"},
-		Usage:    "Home directory of the node `DIR`",
-		Required: true,
-	}
 )
 
 func main() {
