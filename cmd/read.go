@@ -11,36 +11,45 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// ReadStream reads and displays data from a stream starting from the specified entry.
 func ReadStream(cli *cli.Context) error {
 	node := cli.String("node")
 	from := cli.Uint64("from")
 
 	stream, err := datastreamer.NewClient(node, datastreamer.StreamType(1))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create stream client: %w", err)
 	}
 
 	stream.FromEntry = from
 	stream.SetProcessEntryFunc(printEntryNum)
 
-	err = stream.Start()
-	if err != nil {
-		return err
+	if err := stream.Start(); err != nil {
+		return fmt.Errorf("failed to start stream: %w", err)
 	}
 
-	err = stream.ExecCommand(datastreamer.CmdStart)
-	if err != nil {
-		return err
+	if err := stream.ExecCommand(datastreamer.CmdStart); err != nil {
+		return fmt.Errorf("failed to execute start command: %w", err)
 	}
 
+	// Set up signal handling for graceful shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 
-	return stream.ExecCommand(datastreamer.CmdStop)
+	if err := stream.ExecCommand(datastreamer.CmdStop); err != nil {
+		return fmt.Errorf("failed to execute stop command: %w", err)
+	}
+
+	return nil
 }
 
+// printEntryNum prints information about a stream entry.
 func printEntryNum(e *datastreamer.FileEntry, c *datastreamer.StreamClient, _ *datastreamer.StreamServer) error {
+	if e == nil {
+		return fmt.Errorf("received nil entry")
+	}
+
 	kind := "unknown"
 	switch e.Type {
 	case 1:
@@ -49,7 +58,10 @@ func printEntryNum(e *datastreamer.FileEntry, c *datastreamer.StreamClient, _ *d
 		kind = "transaction"
 	case 3:
 		kind = "block end"
+	default:
+		kind = fmt.Sprintf("unknown type %d", e.Type)
 	}
+
 	fmt.Printf("%6d | %11s | %s\n", e.Number, kind, hexutil.Encode(e.Data))
 	return nil
 }

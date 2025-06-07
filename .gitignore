@@ -1,6 +1,6 @@
 # build artifacts
 build
 
-# goland
+# IDEs
 .idea
-
+.vscode

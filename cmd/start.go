@@ -22,7 +22,6 @@ import (
 )
 
 func StartNode(cli *cli.Context) error {
-
 	homeDir := cli.String("home")
 	dataPort := uint16(cli.Uint("port"))
 
@@ -32,17 +31,24 @@ func StartNode(cli *cli.Context) error {
 	var err error
 	viper.SetConfigFile(fmt.Sprintf("%s/%s", homeDir, "config/config.toml"))
 	if err = viper.ReadInConfig(); err != nil {
-		return err
+		return fmt.Errorf("failed to read config: %w", err)
 	}
 	if err = viper.Unmarshal(cfg); err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 	if err = cfg.ValidateBasic(); err != nil {
-		return err
+		return fmt.Errorf("invalid config: %w", err)
 	}
 
-	state := app.NewState(homeDir)
-	defer state.Close()
+	state, err := app.NewState(homeDir)
+	if err != nil {
+		return fmt.Errorf("failed to create state: %w", err)
+	}
+	defer func() {
+		if closeErr := state.Close(); closeErr != nil {
+			fmt.Printf("Error closing state: %v\n", closeErr)
+		}
+	}()
 
 	pv := privval.LoadFilePV(
 		cfg.PrivValidatorKeyFile(),
@@ -53,7 +59,7 @@ func StartNode(cli *cli.Context) error {
 
 	var nodeKey *p2p.NodeKey
 	if nodeKey, err = p2p.LoadNodeKey(cfg.NodeKeyFile()); err != nil {
-		return err
+		return fmt.Errorf("failed to load node key: %w", err)
 	}
 
 	streamFile := strings.Join([]string{homeDir, "dseq.bin"}, "/")
@@ -67,26 +73,28 @@ func StartNode(cli *cli.Context) error {
 		nil,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create stream server: %w", err)
 	}
 
-	err = streamServer.Start()
-	if err != nil {
-		return err
+	if err = streamServer.Start(); err != nil {
+		return fmt.Errorf("failed to start stream server: %w", err)
 	}
 
 	logger := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	if logger, err = flags.ParseLogLevel(cfg.LogLevel, logger, config.DefaultLogLevel); err != nil {
-		return err
+		return fmt.Errorf("failed to parse log level: %w", err)
 	}
 
-	sequencer := app.NewSequencer(
+	sequencer, err := app.NewSequencer(
 		logger,
 		app.WithIdentity(cfg.Moniker),
 		app.WithAddress(addr),
 		app.WithState(state),
 		app.WithDataServer(streamServer),
 	)
+	if err != nil {
+		return fmt.Errorf("failed to create sequencer: %w", err)
+	}
 
 	var n *node.Node
 	if n, err = node.NewNode(
@@ -98,15 +106,17 @@ func StartNode(cli *cli.Context) error {
 		config.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		logger); err != nil {
-		return err
+		return fmt.Errorf("failed to create node: %w", err)
 	}
 
 	if err = n.Start(); err != nil {
-		return err
+		return fmt.Errorf("failed to start node: %w", err)
 	}
 
 	defer func() {
-		_ = n.Stop()
+		if stopErr := n.Stop(); stopErr != nil {
+			fmt.Printf("Error stopping node: %v\n", stopErr)
+		}
 		n.Wait()
 	}()
 
@@ -114,5 +124,5 @@ func StartNode(cli *cli.Context) error {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 
-	return err
+	return nil
 }
