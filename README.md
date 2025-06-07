@@ -1,16 +1,27 @@
-# DSEQ - Distributed Sequence Generator
+# DSEQ - Distributed Byte Sequencer
 
-A distributed sequence generator built with Go and CometBFT, providing reliable and consistent sequence numbers across multiple nodes.
+A distributed byte sequencer built with Go and CometBFT that produces a uniform sequence of bytes from multiple uncoordinated producers. The system ensures that all nodes maintain the same sequence of bytes, even when they receive different input transactions.
 
 ## Features
 
-- Distributed sequence generation
-- Multi-node support
+- Distributed byte sequence coordination
+- Byzantine Fault Tolerance (BFT) consensus
+- Multi-node support with independent inputs
+- Consistent byte sequence across all nodes
 - Load testing capabilities
 - Health monitoring
 - Metrics collection
 - Tracing support
 - Structured logging
+
+## How It Works
+
+DSEQ uses CometBFT's BFT consensus to ensure that all nodes maintain the same sequence of bytes, regardless of the order or source of incoming transactions. This is achieved through:
+
+1. **Transaction Broadcasting**: Nodes broadcast their transactions to the network
+2. **Consensus**: CometBFT's BFT consensus ensures all nodes agree on the transaction order
+3. **Sequence Generation**: Each node processes the same sequence of transactions in the same order
+4. **Consistency**: All nodes produce identical byte sequences despite receiving different inputs
 
 ## Prerequisites
 
@@ -64,6 +75,23 @@ Stop the testnet:
 make stop
 ```
 
+### Testing the Sequencer
+
+1. Send transactions to different nodes:
+```bash
+# Send to node 1
+curl -s 'localhost:26657/broadcast_tx_commit?tx="0xDEADBEEF"'
+
+# Send to node 2
+curl -s 'localhost:26660/broadcast_tx_commit?tx="0xCAFEBABE"'
+```
+
+2. Verify sequence consistency:
+```bash
+# Compare sequence files across nodes
+make checksum
+```
+
 ### Load Testing
 
 Run load tests with different configurations:
@@ -84,12 +112,12 @@ make load NODES=localhost:26657 REQUESTS=50 CONCURRENCY=5
 
 ### Monitoring
 
-Monitor all nodes:
+Monitor all nodes to verify sequence consistency:
 ```bash
 make read-all
 ```
 
-Compare node sequence files:
+Compare node sequence files to ensure they match:
 ```bash
 make checksum
 ```
