@@ -41,9 +41,27 @@ REQUESTS ?= 100
 build: ## Build the binary for current platform
 	$(GOENVVARS) go build $(LDFLAGS) -o $(GOBIN)/$(GOBINARY) $(GOCMD)
 
-.PHONY: build-docker
-build-docker: ## Build multi-architecture Docker image
-	docker buildx create --use --name multiarch-builder || true
+.PHONY: docker-build
+docker-build: ## Build multi-architecture Docker image locally
+	@echo "Building multi-architecture Docker image locally..."
+	@if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then \
+		echo "Creating new buildx builder..."; \
+		docker buildx create --name multiarch-builder --use; \
+	fi
+	docker buildx build --platform $(DOCKER_PLATFORMS) \
+		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) \
+		--build-arg GIT_COMMIT=$(GIT_COMMIT) \
+		--load .
+
+.PHONY: docker-publish
+docker-publish: ## Build and publish multi-architecture Docker image
+	@echo "Building and publishing multi-architecture Docker image..."
+	@if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then \
+		echo "Creating new buildx builder..."; \
+		docker buildx create --name multiarch-builder --use; \
+	fi
 	docker buildx build --platform $(DOCKER_PLATFORMS) \
 		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
 		--build-arg VERSION=$(VERSION) \
