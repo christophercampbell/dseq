@@ -66,7 +66,7 @@ func Metrics() Middleware {
 			// Record metrics
 			duration := time.Since(start).Seconds()
 			metrics.TransactionDuration.WithLabelValues(r.Method).Observe(duration)
-			metrics.TransactionTotal.WithLabelValues(string(rw.status)).Inc()
+			metrics.TransactionTotal.WithLabelValues(fmt.Sprintf("%d", rw.status)).Inc()
 		})
 	}
 }

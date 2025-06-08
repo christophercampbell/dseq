@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	db "github.com/cometbft/cometbft-db"
 )
@@ -24,6 +25,11 @@ type State struct {
 // NewState creates a new State instance with the given path.
 // Returns an error if the state cannot be created or loaded.
 func NewState(path string) (*State, error) {
+	// Ensure the directory exists
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create state directory at %s: %w", path, err)
+	}
+
 	name := "state"
 	db, err := db.NewGoLevelDB(name, path)
 	if err != nil {

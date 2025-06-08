@@ -70,7 +70,7 @@ docker-publish: ## Build and publish multi-architecture Docker image
 		--push .
 
 .PHONY: build-docker-local
-build-docker-local: build ## Build local Docker image
+build-docker-local: ## Build local Docker image
 	@cd networks/local && make
 
 # Test targets
@@ -93,8 +93,8 @@ clean: ## Clean build artifacts
 # Network targets
 .PHONY: start
 start: stop build-docker-local ## Run a 4-node testnet locally
-	@if ! [ -f build/node0/config/genesis.json ]; then \
-		cometbft testnet --config networks/local/localnode/config-template.toml --o ./build --starting-ip-address 192.167.10.2; \
+	@if ! [ -f $(GOBIN)/node0/config/genesis.json ]; then \
+		cometbft testnet --config networks/local/localnode/config-template.toml --o $(GOBIN) --starting-ip-address 192.167.10.2; \
 	fi
 	docker-compose up -d
 
@@ -124,15 +124,15 @@ load-heavy: ## Heavy load test (1000 requests, 30 concurrent)
 checksum: ## Compare node sequence files
 	@echo "Comparing sequence files..."
 	@for i in {0..3}; do \
-		echo "Node $$i: $$(md5sum "./build/node$${i}/dseq.bin" | cut -d' ' -f1)"; \
+		echo "Node $$i: $$(md5sum "$(GOBIN)/node$${i}/dseq.bin" | cut -d' ' -f1)"; \
 	done
 
 .PHONY: read-all
 read-all: ## Monitor all nodes using multitail
-	multitail -l "./build/dseq read --node localhost:6900" \
-		-l "./build/dseq read --node localhost:6901" \
-		-l "./build/dseq read --node localhost:6902" \
-		-l "./build/dseq read --node localhost:6903"
+	multitail -l "$(GOBIN)/$(GOBINARY) read --node localhost:6900" \
+		-l "$(GOBIN)/$(GOBINARY) read --node localhost:6901" \
+		-l "$(GOBIN)/$(GOBINARY) read --node localhost:6902" \
+		-l "$(GOBIN)/$(GOBINARY) read --node localhost:6903"
 
 # Development tools
 .PHONY: lint

@@ -21,7 +21,7 @@ var (
 			Help:    "Transaction processing duration in seconds",
 			Buckets: prometheus.DefBuckets,
 		},
-		[]string{"type"},
+		[]string{"method"},
 	)
 
 	// Block metrics
